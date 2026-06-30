@@ -13,9 +13,8 @@ from playwright.sync_api import sync_playwright
 TARGET_URL = "https://www.ce.kmitl.ac.th/"
 STATE_FILE = "last_news.json"
 
-# CSS selector ของส่วนที่แสดงหัวข้อข่าว - ต้องปรับตามโครงสร้างจริงของเว็บ
-# ถ้าไม่แน่ใจ ให้ปล่อยเป็นค่า default นี้ก่อน สคริปต์จะดึงข้อความทั้งหน้ามาเทียบแทน
-NEWS_SELECTOR = None  # เช่น "div.news-item h3" ถ้ารู้ selector ที่แน่นอน
+# Selector ของตารางข่าวประกาศ พบจาก class จริงของเว็บ (กด F12 แล้ว inspect element)
+NEWS_SELECTOR = "table.AnnouncePage-table tr"
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_USER_ID = os.environ.get("LINE_USER_ID")
@@ -32,7 +31,12 @@ def fetch_news_text():
 
         if NEWS_SELECTOR:
             elements = page.query_selector_all(NEWS_SELECTOR)
-            text = "\n".join(el.inner_text().strip() for el in elements)
+            # รวมข้อความในแต่ละแถว (tr) ให้เป็นบรรทัดเดียว แทนที่ newline ภายในแถวด้วยช่องว่าง
+            text = "\n".join(
+                " ".join(el.inner_text().split())
+                for el in elements
+                if el.inner_text().strip()
+            )
         else:
             # ถ้ายังไม่รู้ selector ที่แน่ชัด ใช้ข้อความทั้งหน้าแทนไปก่อน
             text = page.inner_text("body")
