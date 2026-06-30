@@ -26,9 +26,9 @@ def fetch_news_text():
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
-        page.goto(TARGET_URL, wait_until="networkidle", timeout=30000)
+        page.goto(TARGET_URL, wait_until="domcontentloaded", timeout=60000)
         # รอให้ JS render เนื้อหาเสร็จ (ปรับเวลาได้ถ้าเว็บโหลดช้า)
-        page.wait_for_timeout(3000)
+        page.wait_for_timeout(5000)
 
         if NEWS_SELECTOR:
             elements = page.query_selector_all(NEWS_SELECTOR)
