@@ -45,12 +45,12 @@ def load_last_state():
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    return {"hash": None, "snippet": ""}
+    return {"lines": []}
 
 
-def save_state(hash_value, snippet):
+def save_state(lines):
     with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump({"hash": hash_value, "snippet": snippet}, f, ensure_ascii=False, indent=2)
+        json.dump({"lines": lines}, f, ensure_ascii=False, indent=2)
 
 
 def send_line_message(message):
@@ -82,21 +82,33 @@ def main():
         sys.exit(1)
 
     current_text = fetch_news_text()
-    current_hash = hashlib.sha256(current_text.encode("utf-8")).hexdigest()
+    print("ดึงข้อความได้ความยาว:", len(current_text), "ตัวอักษร")
+
+    # แยกเป็นบรรทัด ตัดบรรทัดว่างและช่องว่างหัวท้ายออก กรองบรรทัดสั้นเกินไปทิ้ง (เช่น 1-2 ตัวอักษร ที่มักเป็นขยะ)
+    current_lines = [
+        line.strip() for line in current_text.split("\n")
+        if len(line.strip()) > 8
+    ]
+    current_set = set(current_lines)
 
     last_state = load_last_state()
+    last_set = set(last_state["lines"])
 
-    if last_state["hash"] is None:
+    if not last_state["lines"]:
         # รันครั้งแรก แค่บันทึก state ไว้ ยังไม่ส่งแจ้งเตือน (กันเด้งครั้งแรกตอนตั้งระบบ)
         print("รันครั้งแรก บันทึกสถานะเริ่มต้น ยังไม่ส่งแจ้งเตือน")
-        save_state(current_hash, current_text[:300])
+        save_state(current_lines)
         return
 
-    if current_hash != last_state["hash"]:
-        print("ตรวจพบการเปลี่ยนแปลง ส่งแจ้งเตือน LINE")
-        message = f"📢 เว็บ ce.kmitl.ac.th มีการอัปเดตใหม่!\nเข้าไปดูที่: {TARGET_URL}"
+    new_lines = [line for line in current_lines if line not in last_set]
+
+    if new_lines:
+        print(f"ตรวจพบข้อความใหม่ {len(new_lines)} บรรทัด ส่งแจ้งเตือน LINE")
+        # จำกัดจำนวนบรรทัดที่ส่ง กันข้อความยาวเกินไป (LINE จำกัดความยาวข้อความ)
+        preview = "\n".join(new_lines[:10])
+        message = f"📢 เว็บ ce.kmitl.ac.th มีข่าวใหม่:\n\n{preview}\n\n🔗 {TARGET_URL}"
         send_line_message(message)
-        save_state(current_hash, current_text[:300])
+        save_state(current_lines)
     else:
         print("ไม่มีการเปลี่ยนแปลง")
 
