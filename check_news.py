@@ -17,8 +17,8 @@ STATE_FILE = "last_news.json"
 # ถ้าไม่แน่ใจ ให้ปล่อยเป็นค่า default นี้ก่อน สคริปต์จะดึงข้อความทั้งหน้ามาเทียบแทน
 NEWS_SELECTOR = None  # เช่น "div.news-item h3" ถ้ารู้ selector ที่แน่นอน
 
-LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
-LINE_USER_ID = os.environ.get("LINE_USER_ID")
+LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("VKdgtoZ0rPaZS2KhStHhWDhX/C3wAqBFsW+3iI203FfW7mqPSZ0mp8tTpHNh7n9KWSHeoe54rPXaLjF52AwphGLKIML7hmi5WK1mwSifuEZI50PbAb2yKf59x7WqyDkgkUDwwNw66EhgHe59ovN0jAdB04t89/1O/w1cDnyilFU=")
+LINE_USER_ID = os.environ.get("Ufae8a45d004adaf01282a4da738efeaa")
 
 
 def fetch_news_text():
