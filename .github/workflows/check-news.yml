@@ -1,41 +1,47 @@
 name: Check CE KMITL News
-
+ 
 on:
   schedule:
     # รันทุก 1 ชั่วโมง (เวลา UTC) ปรับความถี่ได้ตามต้องการ
     - cron: "0 * * * *"
   workflow_dispatch: {}  # กดรันเองได้จากหน้า GitHub Actions เพื่อทดสอบ
-
+ 
 permissions:
   contents: write  # ต้องเขียนไฟล์ last_news.json กลับเข้า repo ได้
-
+ 
+concurrency:
+  group: ce-news-check
+  cancel-in-progress: false  # ให้รอคิวแทนที่จะยกเลิกของเดิม ป้องกัน push ชนกัน
+ 
 jobs:
   check-news:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
+ 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
+ 
       - name: Install dependencies
         run: |
           pip install playwright
           playwright install chromium --with-deps
-
+ 
       - name: Run news check script
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
         run: python check_news.py
-
+ 
       - name: Commit updated state file
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add last_news.json
           git diff --staged --quiet || git commit -m "update news state"
+          git pull --rebase origin main
           git push
+ 
